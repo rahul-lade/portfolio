@@ -14,16 +14,34 @@ const SOCIAL_LINKS = [
 ] as const;
 
 const PageClient = () => {
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     message: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    setFormData({ name: '', email: '', message: '' });
+    setStatus('loading');
+    
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (res.ok) {
+        setStatus('success');
+        setFormData({ name: '', email: '', message: '' });
+      } else {
+        setStatus('error');
+      }
+    } catch (error) {
+      console.error(error);
+      setStatus('error');
+    }
   };
 
   return (
@@ -69,6 +87,7 @@ const PageClient = () => {
                 placeholder="Your name"
                 className="rounded-lg border border-surface-border bg-surface px-5 py-3 text-sm text-foreground placeholder:text-text-muted focus:border-violet/50 focus:outline-none focus:ring-1 focus:ring-violet/30"
                 required
+                disabled={status === 'loading'}
               />
             </div>
 
@@ -87,6 +106,7 @@ const PageClient = () => {
                 placeholder="your@email.com"
                 className="rounded-lg border border-surface-border bg-surface px-5 py-3 text-sm text-foreground placeholder:text-text-muted focus:border-violet/50 focus:outline-none focus:ring-1 focus:ring-violet/30"
                 required
+                disabled={status === 'loading'}
               />
             </div>
 
@@ -105,17 +125,30 @@ const PageClient = () => {
                 rows={6}
                 className="resize-none rounded-lg border border-surface-border bg-surface px-5 py-3 text-sm text-foreground placeholder:text-text-muted focus:border-violet/50 focus:outline-none focus:ring-1 focus:ring-violet/30"
                 required
+                disabled={status === 'loading'}
               />
             </div>
 
             {/* Submit */}
             <button
               type="submit"
-              className="group flex cursor-pointer items-center justify-center gap-3 rounded-lg bg-violet px-8 py-3 text-sm font-medium text-white transition-all hover:bg-violet-glow"
+              disabled={status === 'loading'}
+              className="group flex cursor-pointer items-center justify-center gap-3 rounded-lg bg-violet px-8 py-3 text-sm font-medium text-white transition-all hover:bg-violet-glow disabled:opacity-70"
             >
-              Send Message
+              {status === 'loading' ? 'Sending...' : 'Send Message'}
               <Send size={16} className="transition-transform group-hover:translate-x-1" />
             </button>
+
+            {status === 'success' && (
+              <p className="text-sm font-medium text-green-500">
+                Message sent successfully! I&apos;ll get back to you soon.
+              </p>
+            )}
+            {status === 'error' && (
+              <p className="text-sm font-medium text-red-500">
+                Failed to send message. Please try again later.
+              </p>
+            )}
           </motion.form>
 
           {/* Sidebar */}

@@ -4,6 +4,7 @@ import React from 'react';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { MapPin, Briefcase, Code2 } from 'lucide-react';
+import { GlowCard } from '@/components/effects/GlowCard';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { TextReveal } from '@/components/effects/TextReveal';
 import { TechMarquee } from '@/components/effects/TechMarquee';
@@ -134,23 +135,23 @@ const BentoGrid = () => {
             custom={0.2}
             className="flex flex-col gap-5 lg:col-span-3"
           >
-            <div className="group relative rounded-xl border border-surface-border bg-surface p-8 transition-all duration-300 hover:-translate-y-1 hover:border-violet/40">
-              {/* Hover glow behind card */}
-              <div className="pointer-events-none absolute -inset-px rounded-xl bg-violet/5 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-              <h3 className="relative mb-5 text-lg font-semibold text-foreground">
-                Summary
-              </h3>
-              <div className="flex flex-col gap-5">
-                {SUMMARY_PARAGRAPHS.map((paragraph, i) => (
-                  <p
-                    key={i}
-                    className="text-sm leading-relaxed text-text-muted"
-                  >
-                    {paragraph}
-                  </p>
-                ))}
+            <GlowCard className="group relative rounded-xl border border-surface-border bg-surface transition-colors duration-200 hover:border-violet/30">
+              <div className="p-8">
+                <h3 className="relative mb-5 text-lg font-semibold text-foreground">
+                  Summary
+                </h3>
+                <div className="flex flex-col gap-5">
+                  {SUMMARY_PARAGRAPHS.map((paragraph, i) => (
+                    <p
+                      key={i}
+                      className="text-sm leading-relaxed text-text-muted"
+                    >
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
               </div>
-            </div>
+            </GlowCard>
           </motion.div>
         </div>
 

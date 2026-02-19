@@ -85,6 +85,8 @@ const StarfieldCanvas = ({ className = '' }: { className?: string }) => {
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
       ctx.scale(dpr, dpr);
@@ -93,7 +95,8 @@ const StarfieldCanvas = ({ className = '' }: { className?: string }) => {
       initStars(rect.width, rect.height);
     };
 
-    resize();
+    // Initial resize inside a requestAnimationFrame to ensure layout is computed
+    requestAnimationFrame(resize);
     window.addEventListener('resize', resize);
 
     const handleMouse = (e: MouseEvent) => {

@@ -8,7 +8,12 @@ import Link from 'next/link';
 import { PROJECTS } from '@/data/projects';
 import { BorderBeam } from '@/components/effects/BorderBeam';
 
-const CATEGORIES = ['All', 'Full-Stack', 'Frontend', 'AI/ML'] as const;
+import dynamic from 'next/dynamic';
+
+const FloatingCrystal = dynamic(
+  () => import('@/components/effects/FloatingCrystal').then((m) => m.FloatingCrystal),
+  { ssr: false }
+);
 
 const PageClient = () => {
   const [activeCategory, setActiveCategory] = useState<string>('All');
@@ -21,21 +26,35 @@ const PageClient = () => {
   return (
     <div className="min-h-dvh pt-24">
       <div className="mx-auto max-w-6xl px-5 py-10">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <span className="text-sm font-medium text-violet">Portfolio</span>
-          <h1 className="mt-3 text-3xl font-bold text-foreground md:text-5xl">
-            All Projects
-          </h1>
-          <p className="mt-3 max-w-2xl text-text-muted">
-            A collection of projects I&apos;ve built, ranging from full-stack
-            applications to AI-powered tools and creative frontends.
-          </p>
-        </motion.div>
+        {/* Header with 3D Element */}
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex-1"
+          >
+            <span className="text-sm font-medium text-violet">Portfolio</span>
+            <h1 className="mt-3 text-3xl font-bold text-foreground md:text-5xl">
+              All Projects
+            </h1>
+            <p className="mt-3 max-w-2xl text-text-muted">
+              A collection of projects I&apos;ve built, ranging from full-stack
+              applications to AI-powered tools and creative frontends.
+            </p>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="relative h-64 w-full lg:h-80 lg:w-1/3"
+          >
+            <FloatingCrystal />
+            {/* Gradient overlay for blending */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent lg:bg-gradient-to-l" />
+          </motion.div>
+        </div>
 
         {/* Filter Tabs */}
         <motion.div
