@@ -5,12 +5,13 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Github, Linkedin, Twitter, Mail } from 'lucide-react';
 import Link from 'next/link';
+import { sendContactEmail } from '../actions';
 
 const SOCIAL_LINKS = [
   { href: 'https://github.com', icon: Github, label: 'GitHub' },
   { href: 'https://linkedin.com', icon: Linkedin, label: 'LinkedIn' },
   { href: 'https://x.com', icon: Twitter, label: 'X (Twitter)' },
-  { href: 'mailto:hello@example.com', icon: Mail, label: 'Email' },
+  { href: 'mailto:rahullade935@gmail.com', icon: Mail, label: 'Email' },
 ] as const;
 
 const PageClient = () => {
@@ -24,15 +25,11 @@ const PageClient = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
-    
-    try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
 
-      if (res.ok) {
+    try {
+      const result = await sendContactEmail(formData);
+
+      if (result.success) {
         setStatus('success');
         setFormData({ name: '', email: '', message: '' });
       } else {
@@ -162,10 +159,10 @@ const PageClient = () => {
             <div className="rounded-xl border border-surface-border bg-surface p-8">
               <h3 className="text-lg font-semibold text-foreground">Email</h3>
               <Link
-                href="mailto:hello@example.com"
+                href="mailto:rahullade935@gmail.com"
                 className="mt-3 block text-sm text-text-muted transition-colors hover:text-violet"
               >
-                hello@example.com
+                rahullade935@gmail.com
               </Link>
             </div>
 

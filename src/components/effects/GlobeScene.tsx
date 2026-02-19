@@ -2,23 +2,14 @@
 
 import React, { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Sphere, Float, Line } from '@react-three/drei';
+import { OrbitControls, Float, Line } from '@react-three/drei';
 import type { Group, Mesh } from 'three';
 import * as THREE from 'three';
 
 /* ── Wireframe globe shell ── */
 const GlobeWireframe = () => {
-  const meshRef = useRef<Mesh>(null);
-
-  useFrame((_, delta) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.15;
-      meshRef.current.rotation.x += delta * 0.03;
-    }
-  });
-
   return (
-    <mesh ref={meshRef}>
+    <mesh>
       <sphereGeometry args={[2, 32, 32]} />
       <meshBasicMaterial
         color="#8b5cf6"
@@ -32,16 +23,8 @@ const GlobeWireframe = () => {
 
 /* ── Glowing inner sphere ── */
 const GlobeGlow = () => {
-  const meshRef = useRef<Mesh>(null);
-
-  useFrame((_, delta) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.1;
-    }
-  });
-
   return (
-    <mesh ref={meshRef}>
+    <mesh>
       <sphereGeometry args={[1.95, 32, 32]} />
       <meshBasicMaterial
         color="#7c3aed"
@@ -77,17 +60,8 @@ const latLongToVector3 = (lat: number, lng: number, radius: number) => {
 };
 
 const GlobeDots = () => {
-  const groupRef = useRef<Group>(null);
-
-  useFrame((_, delta) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y += delta * 0.15;
-      groupRef.current.rotation.x += delta * 0.03;
-    }
-  });
-
   return (
-    <group ref={groupRef}>
+    <group>
       {MARKER_POSITIONS.map(([lat, lng], i) => {
         const pos = latLongToVector3(lat, lng, 2.02);
         return (
@@ -134,17 +108,8 @@ const GlobeArc = ({ from, to }: { from: [number, number]; to: [number, number] }
 };
 
 const GlobeArcs = () => {
-  const groupRef = useRef<Group>(null);
-
-  useFrame((_, delta) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y += delta * 0.15;
-      groupRef.current.rotation.x += delta * 0.03;
-    }
-  });
-
   return (
-    <group ref={groupRef}>
+    <group>
       {ARC_PAIRS.map(([fromIdx, toIdx], i) => (
         <GlobeArc
           key={i}
@@ -210,22 +175,47 @@ const GlobeParticles = () => {
   );
 };
 
+/* ── Unified rotation group — pauses on hover ── */
+const GlobeGroup = ({ isHovered }: { isHovered: React.RefObject<boolean> }) => {
+  const groupRef = useRef<Group>(null);
+
+  useFrame((_, delta) => {
+    if (groupRef.current && !isHovered.current) {
+      groupRef.current.rotation.y += delta * 0.15;
+      groupRef.current.rotation.x += delta * 0.03;
+    }
+  });
+
+  return (
+    <group ref={groupRef}>
+      <GlobeWireframe />
+      <GlobeGlow />
+      <GlobeDots />
+      <GlobeArcs />
+      <GlobeRing />
+    </group>
+  );
+};
+
 /* ── Main scene ── */
 const GlobeScene = ({ className = '' }: { className?: string }) => {
+  const isHovered = useRef(false);
+
   return (
-    <div className={`h-full w-full ${className}`}>
+    <div
+      className={`h-full w-full ${className}`}
+      onMouseEnter={() => { isHovered.current = true; }}
+      onMouseLeave={() => { isHovered.current = false; }}
+    >
       <Canvas
         camera={{ position: [0, 0, 6], fov: 45 }}
         style={{ background: 'transparent' }}
         gl={{ alpha: true, antialias: true }}
+        dpr={[1, 1.5]}
       >
         <ambientLight intensity={0.5} />
         <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.3}>
-          <GlobeWireframe />
-          <GlobeGlow />
-          <GlobeDots />
-          <GlobeArcs />
-          <GlobeRing />
+          <GlobeGroup isHovered={isHovered} />
         </Float>
         <GlobeParticles />
         <OrbitControls

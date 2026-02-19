@@ -15,6 +15,8 @@ const FloatingCrystal = dynamic(
   { ssr: false }
 );
 
+const CATEGORIES = ['All', 'Full-Stack', 'Frontend', 'AI/ML'] as const;
+
 const PageClient = () => {
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
