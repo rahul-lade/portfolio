@@ -3,7 +3,7 @@ import { PageClient } from './_components/PageClient';
 
 const Page = () => {
   return (
-    <Suspense>
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
       <PageClient />
     </Suspense>
   );
