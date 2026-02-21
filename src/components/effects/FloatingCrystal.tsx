@@ -2,108 +2,87 @@
 
 import React, { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import {
-  Float,
-  OrbitControls,
-  MeshDistortMaterial,
-  Environment,
-  Sphere,
-} from '@react-three/drei';
+import { Float, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 
 /* ═══════════════════════════════════════════════════════════
- * Main orb — liquid-metal morphing sphere
- * Uses MeshDistortMaterial which properly recalculates normals
- * after noise displacement, giving realistic shading + reflections
+ * Particle Wave Field — grid of particles that undulate
+ * like ocean waves with layered sine / cosine motion
  * ═══════════════════════════════════════════════════════════ */
-const LiquidOrb = () => {
-  const meshRef = useRef<THREE.Mesh>(null);
+const ParticleWave = () => {
+  const pointsRef = useRef<THREE.Points>(null);
+  const GRID = 32;
+  const COUNT = GRID * GRID;
+  const SPACING = 0.12;
+
+  const basePositions = useMemo(() => {
+    const pos = new Float32Array(COUNT * 3);
+    Array.from({ length: GRID }).forEach((_, ix) => {
+      Array.from({ length: GRID }).forEach((_, iz) => {
+        const idx = ix * GRID + iz;
+        pos[idx * 3] = (ix - GRID / 2) * SPACING;
+        pos[idx * 3 + 1] = 0;
+        pos[idx * 3 + 2] = (iz - GRID / 2) * SPACING;
+      });
+    });
+    return pos;
+  }, []);
+
+  const currentPositions = useMemo(() => new Float32Array(basePositions), [basePositions]);
+
+  const colors = useMemo(() => {
+    const col = new Float32Array(COUNT * 3);
+    Array.from({ length: COUNT }).forEach((_, i) => {
+      const t = Math.random();
+      // Violet (#8b5cf6) → Cyan (#06b6d4) blend
+      col[i * 3] = 0.545 * (1 - t) + 0.024 * t;
+      col[i * 3 + 1] = 0.361 * (1 - t) + 0.714 * t;
+      col[i * 3 + 2] = 0.965 * (1 - t) + 0.831 * t;
+    });
+    return col;
+  }, []);
 
   useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y = state.clock.elapsedTime * 0.05;
-    }
+    if (!pointsRef.current) return;
+    const t = state.clock.elapsedTime;
+
+    Array.from({ length: COUNT }).forEach((_, i) => {
+      const x = basePositions[i * 3];
+      const z = basePositions[i * 3 + 2];
+      currentPositions[i * 3 + 1] =
+        Math.sin(x * 3 + t * 1.2) * 0.3 +
+        Math.cos(z * 2.5 + t * 0.9) * 0.2 +
+        Math.sin((x + z) * 2 + t * 0.7) * 0.1;
+    });
+
+    pointsRef.current.geometry.attributes.position.needsUpdate = true;
+    pointsRef.current.rotation.y = t * 0.04;
   });
 
   return (
-    <Sphere ref={meshRef} args={[1.4, 128, 128]}>
-      <MeshDistortMaterial
-        color="#7c3aed"
-        envMapIntensity={1.2}
-        clearcoat={1}
-        clearcoatRoughness={0}
-        metalness={0.9}
-        roughness={0.15}
-        distort={0.35}
-        speed={1.8}
-      />
-    </Sphere>
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[currentPositions, 3]} />
+        <bufferAttribute attach="attributes-color" args={[colors, 3]} />
+      </bufferGeometry>
+      <pointsMaterial size={0.03} vertexColors transparent opacity={0.85} sizeAttenuation />
+    </points>
   );
 };
 
 /* ═══════════════════════════════════════════════════════════
- * Glass shell — translucent outer layer for depth
- * ═══════════════════════════════════════════════════════════ */
-const GlassShell = () => {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y = -state.clock.elapsedTime * 0.03;
-      meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.2) * 0.1;
-    }
-  });
-
-  return (
-    <Sphere ref={meshRef} args={[1.8, 64, 64]}>
-      <MeshDistortMaterial
-        color="#06b6d4"
-        envMapIntensity={0.8}
-        metalness={0.1}
-        roughness={0}
-        transparent
-        opacity={0.08}
-        distort={0.2}
-        speed={1.2}
-      />
-    </Sphere>
-  );
-};
-
-/* ═══════════════════════════════════════════════════════════
- * Orbital ring — subtle accent
- * ═══════════════════════════════════════════════════════════ */
-const OrbitalRing = () => {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.x = Math.PI / 2.5 + Math.sin(state.clock.elapsedTime * 0.3) * 0.08;
-      meshRef.current.rotation.z = state.clock.elapsedTime * 0.12;
-    }
-  });
-
-  return (
-    <mesh ref={meshRef}>
-      <torusGeometry args={[2.4, 0.008, 16, 128]} />
-      <meshBasicMaterial color="#8b5cf6" transparent opacity={0.3} />
-    </mesh>
-  );
-};
-
-/* ═══════════════════════════════════════════════════════════
- * Ambient particles — dots surrounding the orb
+ * Ambient particles — dots orbiting around the wave field
  * ═══════════════════════════════════════════════════════════ */
 const AmbientParticles = () => {
   const pointsRef = useRef<THREE.Points>(null);
 
   const { positions, colors } = useMemo(() => {
-    const count = 500;
+    const count = 300;
     const pos = new Float32Array(count * 3);
     const col = new Float32Array(count * 3);
 
     Array.from({ length: count }).forEach((_, i) => {
-      const r = 2.5 + Math.random() * 2.5;
+      const r = 2.5 + Math.random() * 3;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
 
@@ -122,7 +101,7 @@ const AmbientParticles = () => {
 
   useFrame((_, delta) => {
     if (pointsRef.current) {
-      pointsRef.current.rotation.y += delta * 0.012;
+      pointsRef.current.rotation.y += delta * 0.015;
     }
   });
 
@@ -133,10 +112,10 @@ const AmbientParticles = () => {
         <bufferAttribute attach="attributes-color" args={[colors, 3]} />
       </bufferGeometry>
       <pointsMaterial
-        size={0.012}
+        size={0.015}
         vertexColors
         transparent
-        opacity={0.6}
+        opacity={0.5}
         sizeAttenuation
       />
     </points>
@@ -144,7 +123,7 @@ const AmbientParticles = () => {
 };
 
 /* ═══════════════════════════════════════════════════════════
- * FloatingCrystal — Full scene with environment lighting
+ * FloatingCrystal — Scene composition
  * ═══════════════════════════════════════════════════════════ */
 const FloatingCrystal = ({ className = '' }: { className?: string }) => {
   return (
@@ -155,19 +134,12 @@ const FloatingCrystal = ({ className = '' }: { className?: string }) => {
         gl={{ alpha: true, antialias: true }}
         dpr={[1, 1.5]}
       >
-        {/* Studio-quality environment for reflections */}
-        <Environment preset="city" />
-
         <ambientLight intensity={0.3} />
-        <directionalLight position={[5, 5, 5]} intensity={0.8} color="#e0d5ff" />
-        <pointLight position={[-4, -2, 3]} intensity={0.5} color="#06b6d4" />
+        <pointLight position={[3, 3, 3]} intensity={0.6} color="#8b5cf6" distance={12} />
+        <pointLight position={[-2, -1, 2]} intensity={0.4} color="#06b6d4" distance={10} />
 
-        <Float speed={1.2} rotationIntensity={0.15} floatIntensity={0.25}>
-          <group>
-            <LiquidOrb />
-            <GlassShell />
-            <OrbitalRing />
-          </group>
+        <Float speed={1} rotationIntensity={0.03} floatIntensity={0.1}>
+          <ParticleWave />
         </Float>
 
         <AmbientParticles />
@@ -176,7 +148,7 @@ const FloatingCrystal = ({ className = '' }: { className?: string }) => {
           enableZoom={false}
           enablePan={false}
           autoRotate
-          autoRotateSpeed={0.3}
+          autoRotateSpeed={0.4}
         />
       </Canvas>
     </div>
