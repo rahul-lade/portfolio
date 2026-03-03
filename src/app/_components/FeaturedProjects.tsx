@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ExternalLink, Github, ArrowRight, Terminal, Layers, Sparkles } from 'lucide-react';
+import { ExternalLink, Github, ArrowRight, Terminal, Layers, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { GlowCard } from '@/components/effects/GlowCard';
@@ -12,7 +12,7 @@ import { PROJECTS } from '@/data/projects';
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   'Full-Stack': Layers,
   'Frontend': Terminal,
-  'AI/ML': Sparkles,
+  'DevOps': Settings,
 };
 
 const FeaturedProjects = () => {

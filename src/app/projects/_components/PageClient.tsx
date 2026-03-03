@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ExternalLink, Github } from 'lucide-react';
 import Link from 'next/link';
-import { PROJECTS } from '@/data/projects';
+import { PROJECTS, CATEGORIES } from '@/data/projects';
 import { BorderBeam } from '@/components/effects/BorderBeam';
 
 import dynamic from 'next/dynamic';
@@ -15,7 +15,7 @@ const FloatingCrystal = dynamic(
   { ssr: false }
 );
 
-const CATEGORIES = ['All', 'Full-Stack', 'Frontend', 'AI/ML'] as const;
+const ALL_CATEGORIES = ['All', ...CATEGORIES] as const;
 
 const PageClient = () => {
   const [activeCategory, setActiveCategory] = useState<string>('All');
@@ -65,7 +65,7 @@ const PageClient = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="mt-10 flex flex-wrap gap-3"
         >
-          {CATEGORIES.map((category) => (
+          {ALL_CATEGORIES.map((category) => (
             <button
               key={category}
               onClick={() => setActiveCategory(category)}
